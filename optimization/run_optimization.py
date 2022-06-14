@@ -109,8 +109,10 @@ def main(args):
             torchvision.utils.save_image(img_gen, f"results/{str(i).zfill(5)}.jpg", normalize=True, range=(-1, 1))
 
     #print(latent vector)
-    print('origin latent:', latent)
-    print('new latent:', latent_code_init)
+    
+    print('origin latent.shape:', latent_code_init.shape)
+    print('new latent shape:', latent.shape)
+
     
     if args.mode == "edit":
         final_result = torch.cat([img_orig, img_gen])
