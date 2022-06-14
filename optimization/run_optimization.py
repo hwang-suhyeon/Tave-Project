@@ -101,12 +101,17 @@ def main(args):
                 f"loss: {loss.item():.4f};"
             )
         )
+
         if args.save_intermediate_image_every > 0 and i % args.save_intermediate_image_every == 0:
             with torch.no_grad():
                 img_gen, _ = g_ema([latent], input_is_latent=True, randomize_noise=False, input_is_stylespace=args.work_in_stylespace)
 
             torchvision.utils.save_image(img_gen, f"results/{str(i).zfill(5)}.jpg", normalize=True, range=(-1, 1))
 
+    #print(latent vector)
+    print('origin latent:', latent)
+    print('new latent:', latent_code_init)
+    
     if args.mode == "edit":
         final_result = torch.cat([img_orig, img_gen])
     else:
