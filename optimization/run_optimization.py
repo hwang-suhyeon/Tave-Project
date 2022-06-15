@@ -114,12 +114,11 @@ def main(args):
     print('origin latent.shape:', latent_code_init.shape, end = '\n')
     print('new latent shape:', latent.shape, end = '\n')
     print('origin latent: ', latent_code_init, end = '\n')
-    print('new latent: ', latent, end = 'n')
+    print('new latent: ', latent, end = '\n')
     
-    '''
+    diff = abs(latent_code_init - latent)
     for i in range(latent.shape[1]):
-        latent_code_init[]
-    '''
+        print(torch.mean(diff[:, i, :]), end = '\n')   
     
     if args.mode == "edit":
         final_result = torch.cat([img_orig, img_gen])
