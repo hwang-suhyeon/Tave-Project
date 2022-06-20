@@ -95,11 +95,8 @@ def main(args):
                         s_error_59 += ((latent_code_init[:, i, :] - latent[:, i, :]) ** 2).sum()
                     else:
                         s_error += ((latent_code_init[:, i, :] - latent[:, i, :]) ** 2).sum()
-                print('\n 일반: ', s_error)
-                print('\n 59: ', s_error_59)
                 # 5번째, 9번째 layer에만 lambda 적용
-                s_error_59 *= args.l2_lambda
-                print('\n 59 람다: ', s_error_59)
+                s_error *= args.l2_lambda
                 
                 l2_loss = s_error + s_error_59
             loss = c_loss + l2_loss + args.id_lambda * i_loss 
