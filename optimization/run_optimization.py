@@ -93,7 +93,7 @@ def main(args):
             if args.work_in_stylespace:
                 l2_loss = sum([((latent_code_init[c] - latent[c]) ** 2).sum() for c in range(len(latent_code_init))])
                 print('work_in_stylespace\n')
-                print('l2_loss sum 하기 전 리스트: '[((latent_code_init[c] - latent[c]) ** 2).sum() for c in range(len(latent_code_init))], end = '\n')
+                #print('l2_loss sum 하기 전 리스트: '[((latent_code_init[c] - latent[c]) ** 2).sum() for c in range(len(latent_code_init))], end = '\n')
             else:
                 l2_loss = ((latent_code_init - latent) ** 2).sum()
                 print('not work_in_stylespace\n')
