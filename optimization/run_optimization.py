@@ -88,13 +88,21 @@ def main(args):
             if args.work_in_stylespace:
                 l2_loss = sum([((latent_code_init[c] - latent[c]) ** 2).sum() for c in range(len(latent_code_init))])
             else:
-                error = 0
+                s_error = 0
+                s_error_59 = 0
                 for i in range(latent.shape[1]):
                     if i == 4 or i == 8:
-                        error += (latent_code_init[:, i, :] - latent[:, i, :]) ** 2
-
-                l2_loss = error.sum()
-            loss = c_loss + args.l2_lambda * l2_loss + args.id_lambda * i_loss #laa
+                        s_error_59 += ((latent_code_init[:, i, :] - latent[:, i, :]) ** 2).sum()
+                    else:
+                        s_error += ((latent_code_init[:, i, :] - latent[:, i, :]) ** 2).sum()
+                print('\n 일반: ', s_error)
+                print('\n 59: ', s_error_59)
+                # 5번째, 9번째 layer에만 lambda 적용
+                s_error_59 *= args.l2_lambda
+                print('\n 59 람다: ', s_error_59)
+                
+                l2_loss = s_error + s_error_59
+            loss = c_loss + l2_loss + args.id_lambda * i_loss 
         else:
             loss = c_loss
 
