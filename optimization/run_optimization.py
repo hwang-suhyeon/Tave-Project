@@ -59,7 +59,9 @@ def main(args):
         latent = latent_code_init.detach().clone()
         latent.requires_grad = True
 
+    #clip loss 객체 생성
     clip_loss = CLIPLoss(args)
+    #id loss 객체 생성
     id_loss = IDLoss(args)
 
     if args.work_in_stylespace:
@@ -77,18 +79,26 @@ def main(args):
         img_gen, _ = g_ema([latent], input_is_latent=True, randomize_noise=False, input_is_stylespace=args.work_in_stylespace)
 
         c_loss = clip_loss(img_gen, text_inputs)
-
+        print('c_loss: ', c_loss, end = '\n')
         if args.id_lambda > 0:
             i_loss = id_loss(img_gen, img_orig)[0]
         else:
             i_loss = 0
+        print('i_loss: ', i_loss, end = '\n')
+        #그냥 어떻게 동작하는지 알기 위해서 찍어봄
+        for c in range(len(latent_code_init)):
+            print('print for latent_code_init: ', c, end = '\n')
 
         if args.mode == "edit":
             if args.work_in_stylespace:
                 l2_loss = sum([((latent_code_init[c] - latent[c]) ** 2).sum() for c in range(len(latent_code_init))])
+                print('work_in_stylespace\n')
+                print('l2_loss sum 하기 전 리스트: '[((latent_code_init[c] - latent[c]) ** 2).sum() for c in range(len(latent_code_init))], end = '\n')
             else:
                 l2_loss = ((latent_code_init - latent) ** 2).sum()
-            loss = c_loss + args.l2_lambda * l2_loss + args.id_lambda * i_loss
+                print('not work_in_stylespace\n')
+                print('l2_loss: ', l2_loss, end = '\n')
+            loss = c_loss + args.l2_lambda * l2_loss + args.id_lambda * i_loss #laa
         else:
             loss = c_loss
 
