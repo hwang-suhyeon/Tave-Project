@@ -80,7 +80,8 @@ def main(args):
       
         if args.id_lambda > 0:
             i_loss = id_loss(img_gen, img_orig)[0]
-            print('=======')
+            print('\n=======')
+            print('i_loss: ', i_loss, end = '\n')
             print(id_loss(img_gen, img_orig))
             print('=======')
         else:
