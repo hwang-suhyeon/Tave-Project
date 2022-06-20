@@ -61,6 +61,7 @@ def main(args):
 
     #clip loss 객체 생성
     clip_loss = CLIPLoss(args)
+    print('clip_loss: ', clip_loss)
     #id loss 객체 생성
     id_loss = IDLoss(args)
 
@@ -85,7 +86,7 @@ def main(args):
         else:
             i_loss = 0
         print('i_loss: ', i_loss, end = '\n')
-        print('len(latent_code_init)', len(latent_code_init), '\n')
+        # print('len(latent_code_init)', len(latent_code_init), '\n') -> 데이터 개수(이미지 개수)가 1개
         #그냥 어떻게 동작하는지 알기 위해서 찍어봄
         for c in range(len(latent_code_init)):
             print('print for latent_code_init: ', c, end = '\n')
