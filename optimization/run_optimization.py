@@ -59,10 +59,7 @@ def main(args):
         latent = latent_code_init.detach().clone()
         latent.requires_grad = True
 
-    #clip loss 객체 생성
     clip_loss = CLIPLoss(args)
-    print('clip_loss: ', clip_loss)
-    #id loss 객체 생성
     id_loss = IDLoss(args)
 
     if args.work_in_stylespace:
@@ -80,9 +77,12 @@ def main(args):
         img_gen, _ = g_ema([latent], input_is_latent=True, randomize_noise=False, input_is_stylespace=args.work_in_stylespace)
 
         c_loss = clip_loss(img_gen, text_inputs)
-        print('c_loss: ', c_loss, end = '\n')
+      
         if args.id_lambda > 0:
             i_loss = id_loss(img_gen, img_orig)[0]
+            print('=======')
+            print(id_loss(img_gen, img_orig))
+            print('=======')
         else:
             i_loss = 0
         print('i_loss: ', i_loss, end = '\n')
