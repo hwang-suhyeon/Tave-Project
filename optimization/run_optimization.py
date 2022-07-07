@@ -69,75 +69,85 @@ def main(args):
 
     pbar = tqdm(range(args.step))
 
-    for i in pbar:
-        t = i / args.step
-        lr = get_lr(t, args.lr)
-        optimizer.param_groups[0]["lr"] = lr
+    # lamda값이 서서히 변할 때 변화 확인
+    l2_lambda = 0.0001
+    cnt = 0
+    while l2_lambda <= 0.1:
+        cnt += 1
+        l2_lambda = round(l2_lambda, 4)
+        l2_lambda += 0.001
+        
+        #loss 계산 함수
+        for i in pbar:
+            t = i / args.step
+            lr = get_lr(t, args.lr)
+            optimizer.param_groups[0]["lr"] = lr
 
-        img_gen, _ = g_ema([latent], input_is_latent=True, randomize_noise=False, input_is_stylespace=args.work_in_stylespace)
+            img_gen, _ = g_ema([latent], input_is_latent=True, randomize_noise=False, input_is_stylespace=args.work_in_stylespace)
 
-        c_loss = clip_loss(img_gen, text_inputs)
-      
-        if args.id_lambda > 0:
-            i_loss = id_loss(img_gen, img_orig)[0]
-        else:
-            i_loss = 0
-
-        if args.mode == "edit":
-            #여기는 못고침
-            if args.work_in_stylespace:
-                l2_loss = sum([((latent_code_init[c] - latent[c]) ** 2).sum() for c in range(len(latent_code_init))])
+            c_loss = clip_loss(img_gen, text_inputs)
+        
+            if args.id_lambda > 0:
+                i_loss = id_loss(img_gen, img_orig)[0]
             else:
-                s_error = 0
-                s_error_59 = 0
-                for i in range(latent.shape[1]):
-                    if i == 4 or i == 8:
-                        s_error_59 += ((latent_code_init[:, i, :] - latent[:, i, :]) ** 2).sum()
-                    else:
-                        s_error += ((latent_code_init[:, i, :] - latent[:, i, :]) ** 2).sum()
-                
-                # 5번째, 9번째 layer에만 lambda 적용 x
-                s_error *= args.l2_lambda
-                
-                l2_loss = s_error + s_error_59
-            loss = c_loss + l2_loss + args.id_lambda * i_loss 
-        else:
-            loss = c_loss
+                i_loss = 0
 
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+            if args.mode == "edit":
+                #여기는 못고침
+                if args.work_in_stylespace:
+                    l2_loss = sum([((latent_code_init[c] - latent[c]) ** 2).sum() for c in range(len(latent_code_init))])
+                else:
+                    s_error = 0
+                    s_error_59 = 0
+                    for i in range(latent.shape[1]):
+                        if i == 4 or i == 8:
+                            s_error_59 += ((latent_code_init[:, i, :] - latent[:, i, :]) ** 2).sum()
+                        else:
+                            s_error += ((latent_code_init[:, i, :] - latent[:, i, :]) ** 2).sum()
+                    
+                    # 5번째, 9번째 layer에만 lambda 적용 x
+                    s_error *= args.l2_lambda
+                    
+                    l2_loss = s_error + s_error_59
+                loss = c_loss + l2_loss + args.id_lambda * i_loss 
+            else:
+                loss = c_loss
 
-        pbar.set_description(
-            (
-                f"loss: {loss.item():.4f};"
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            pbar.set_description(
+                (
+                    f"loss: {loss.item():.4f};"
+                )
             )
-        )
 
-        if args.save_intermediate_image_every > 0 and i % args.save_intermediate_image_every == 0:
-            with torch.no_grad():
-                img_gen, _ = g_ema([latent], input_is_latent=True, randomize_noise=False, input_is_stylespace=args.work_in_stylespace)
+            if args.save_intermediate_image_every > 0 and i % args.save_intermediate_image_every == 0:
+                with torch.no_grad():
+                    img_gen, _ = g_ema([latent], input_is_latent=True, randomize_noise=False, input_is_stylespace=args.work_in_stylespace)
 
-            torchvision.utils.save_image(img_gen, f"results/{str(i).zfill(5)}.jpg", normalize=True, range=(-1, 1))
+                torchvision.utils.save_image(img_gen, f"results/{str(i).zfill(5)}.jpg", normalize=True, range=(-1, 1))
 
-    
-    print('\n')
-    print()
-    print('origin latent.shape:', latent_code_init.shape, end = '\n')
-    print('new latent shape:', latent.shape, end = '\n')
-    print('origin latent: ', latent_code_init, end = '\n')
-    print('new latent: ', latent, end = '\n')
-    
-    diff = abs(latent_code_init - latent)
-    for i in range(latent.shape[1]):
-        print(torch.mean(diff[:, i, :]), end = '\n')   
-    
-    if args.mode == "edit":
-        final_result = torch.cat([img_orig, img_gen])
-    else:
-        final_result = img_gen
+        
+        print('\n')
+        print()
+        print('origin latent.shape:', latent_code_init.shape, end = '\n')
+        print('new latent shape:', latent.shape, end = '\n')
+        print('origin latent: ', latent_code_init, end = '\n')
+        print('new latent: ', latent, end = '\n')
+        
+        diff = abs(latent_code_init - latent)
+        print("[ ", cnt, " ]=================================================")
+        for i in range(latent.shape[1]):
+            print(torch.mean(diff[:, i, :]), end = '\n')   
+        
+        if args.mode == "edit":
+            final_result = torch.cat([img_orig, img_gen])
+        else:
+            final_result = img_gen
 
-    return final_result
+        return final_result
 
 
 
@@ -165,7 +175,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    result_image = main(args)
+    result_image = []
+    result_image.append(main(args))
 
     torchvision.utils.save_image(result_image.detach().cpu(), os.path.join(args.results_dir, "final_result.jpg"), normalize=True, scale_each=True, range=(-1, 1))
 
