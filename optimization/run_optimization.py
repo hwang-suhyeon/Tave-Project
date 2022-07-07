@@ -70,6 +70,7 @@ def main(args):
     pbar = tqdm(range(args.step))
 
     # lamda값이 서서히 변할 때 변화 확인
+    final_result_list = []
     l2_lambda = 0.0001
     cnt = 0
     while l2_lambda <= 0.1:
@@ -146,6 +147,9 @@ def main(args):
             final_result = torch.cat([img_orig, img_gen])
         else:
             final_result = img_gen
+            
+        
+        final_result_list.append(final_result)
 
         return final_result
 
@@ -174,9 +178,7 @@ if __name__ == "__main__":
                              help="Path to facial recognition network used in ID loss")
 
     args = parser.parse_args()
-
-    result_image = []
-    result_image.append(main(args))
+    result_image = main(args)
 
     torchvision.utils.save_image(result_image.detach().cpu(), os.path.join(args.results_dir, "final_result.jpg"), normalize=True, scale_each=True, range=(-1, 1))
 
