@@ -151,7 +151,7 @@ def main(args):
         
         final_result_list.append(final_result)
 
-        return final_result
+        return final_result_list
 
 
 
