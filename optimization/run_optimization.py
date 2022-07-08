@@ -126,7 +126,7 @@ def main(args):
 
         #rwsult print
         diff = abs(latent_code_init - latent)
-        print("\n[ ", cnt, " ]=================================================")
+        print("\n[ ", cnt, " ]==================================================")
         for i in range(latent.shape[1]):
             print(torch.mean(diff[:, i, :]), end = '\n')
 
