@@ -101,10 +101,10 @@ def main(args):
                 else:
                     # 레이어 별로 lambda값 적용하고 loss값 찍어보기
                     layer_loss = []
-                    l2_loss
+                    l2_loss = 0
                     for i in range(latent.shape[1]):
                         layer_loss.append(torch.mean(((latent_code_init[:, i, :] - latent[:, i, :]) ** 2) * l2_lambda))
-                        l2_loss = ((latent_code_init[:, i, :] - latent[:, i, :]) ** 2).sum() * l2_lambda
+                        l2_loss += ((latent_code_init[:, i, :] - latent[:, i, :]) ** 2).sum() * l2_lambda
 
                 loss = c_loss + l2_loss * l2_lambda + args.id_lambda * i_loss 
             else:
