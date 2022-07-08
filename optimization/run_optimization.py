@@ -107,7 +107,7 @@ def main(args):
                 loss = c_loss + l2_loss + args.id_lambda * i_loss 
             else:
                 loss = c_loss
-            print(loss)
+
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -129,7 +129,6 @@ def main(args):
         print("\n[ ", cnt, " ]=================================================")
         for i in range(latent.shape[1]):
             print(torch.mean(diff[:, i, :]), end = '\n')
-        print(layer_loss)   
 
         # lambda별 결과 저장
         final_loss_result_list[l2_lambda] = layer_loss
