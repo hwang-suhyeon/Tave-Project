@@ -33,6 +33,7 @@ def main(args):
     while l2_lambda <= 0.11:
         cnt += 1
         l2_lambda = round(l2_lambda, 4)
+
         ensure_checkpoint_exists(args.ckpt)
         text_inputs = torch.cat([clip.tokenize(args.description)]).cuda()
         os.makedirs(args.results_dir, exist_ok=True)
@@ -46,6 +47,7 @@ def main(args):
         if args.latent_path:
             latent_code_init = torch.load(args.latent_path).cuda()
         elif args.mode == "edit":
+            torch.manual_seed(1)
             latent_code_init_not_trunc = torch.randn(1, 512).cuda()
             with torch.no_grad():
                 _, latent_code_init, _ = g_ema([latent_code_init_not_trunc], return_latents=True,
