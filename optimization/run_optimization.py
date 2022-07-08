@@ -25,59 +25,58 @@ def get_lr(t, initial_lr, rampdown=0.25, rampup=0.05):
 
 
 def main(args):
-    ensure_checkpoint_exists(args.ckpt)
-    text_inputs = torch.cat([clip.tokenize(args.description)]).cuda()
-    os.makedirs(args.results_dir, exist_ok=True)
-
-    g_ema = Generator(args.stylegan_size, 512, 8)
-    g_ema.load_state_dict(torch.load(args.ckpt)["g_ema"], strict=False)
-    g_ema.eval()
-    g_ema = g_ema.cuda()
-    mean_latent = g_ema.mean_latent(4096)
-
-    if args.latent_path:
-        latent_code_init = torch.load(args.latent_path).cuda()
-    elif args.mode == "edit":
-        latent_code_init_not_trunc = torch.randn(1, 512).cuda()
-        with torch.no_grad():
-            _, latent_code_init, _ = g_ema([latent_code_init_not_trunc], return_latents=True,
-                                        truncation=args.truncation, truncation_latent=mean_latent)
-    else:
-        latent_code_init = mean_latent.detach().clone().repeat(1, 18, 1)
-
-    with torch.no_grad():
-        img_orig, _ = g_ema([latent_code_init], input_is_latent=True, randomize_noise=False)
-
-    if args.work_in_stylespace:
-        with torch.no_grad():
-            _, _, latent_code_init = g_ema([latent_code_init], input_is_latent=True, return_latents=True)
-        latent = [s.detach().clone() for s in latent_code_init]
-        for c, s in enumerate(latent):
-            if c in STYLESPACE_INDICES_WITHOUT_TORGB:
-                s.requires_grad = True
-    else:
-        latent = latent_code_init.detach().clone()
-        latent.requires_grad = True
-
-    clip_loss = CLIPLoss(args)
-    id_loss = IDLoss(args)
-
-    if args.work_in_stylespace:
-        optimizer = optim.Adam(latent, lr=args.lr)
-    else:
-        optimizer = optim.Adam([latent], lr=args.lr)
-
-    pbar = tqdm(range(args.step))
-
     # lamda값이 서서히 변할 때 변화 확인
     final_result_list = []
     final_loss_result_list = {}
     l2_lambda = 0.0001
     cnt = 0
-    while l2_lambda <= 0.1:
+    while l2_lambda <= 0.11:
         cnt += 1
         l2_lambda = round(l2_lambda, 4)
-        
+        ensure_checkpoint_exists(args.ckpt)
+        text_inputs = torch.cat([clip.tokenize(args.description)]).cuda()
+        os.makedirs(args.results_dir, exist_ok=True)
+
+        g_ema = Generator(args.stylegan_size, 512, 8)
+        g_ema.load_state_dict(torch.load(args.ckpt)["g_ema"], strict=False)
+        g_ema.eval()
+        g_ema = g_ema.cuda()
+        mean_latent = g_ema.mean_latent(4096)
+
+        if args.latent_path:
+            latent_code_init = torch.load(args.latent_path).cuda()
+        elif args.mode == "edit":
+            latent_code_init_not_trunc = torch.randn(1, 512).cuda()
+            with torch.no_grad():
+                _, latent_code_init, _ = g_ema([latent_code_init_not_trunc], return_latents=True,
+                                            truncation=args.truncation, truncation_latent=mean_latent)
+        else:
+            latent_code_init = mean_latent.detach().clone().repeat(1, 18, 1)
+
+        with torch.no_grad():
+            img_orig, _ = g_ema([latent_code_init], input_is_latent=True, randomize_noise=False)
+
+        if args.work_in_stylespace:
+            with torch.no_grad():
+                _, _, latent_code_init = g_ema([latent_code_init], input_is_latent=True, return_latents=True)
+            latent = [s.detach().clone() for s in latent_code_init]
+            for c, s in enumerate(latent):
+                if c in STYLESPACE_INDICES_WITHOUT_TORGB:
+                    s.requires_grad = True
+        else:
+            latent = latent_code_init.detach().clone()
+            latent.requires_grad = True
+
+        clip_loss = CLIPLoss(args)
+        id_loss = IDLoss(args)
+
+        if args.work_in_stylespace:
+            optimizer = optim.Adam(latent, lr=args.lr)
+        else:
+            optimizer = optim.Adam([latent], lr=args.lr)
+
+        pbar = tqdm(range(args.step))
+            
         #loss 계산 함수
         for i in pbar:
             t = i / args.step
@@ -101,10 +100,10 @@ def main(args):
                     # 레이어 별로 lambda값 적용하고 loss값 찍어보기
                     layer_loss = []
                     for i in range(latent.shape[1]):
-                        layer_loss.append(((latent_code_init[:, i, :] - latent[:, i, :]) ** 2) * l2_lambda)
-                    l2_loss = ((latent_code_init[:, i, :] - latent[:, i, :]) ** 2).sum() * l2_lambda
+                        layer_loss.append(torch.mean(((latent_code_init[:, i, :] - latent[:, i, :]) ** 2) * l2_lambda))
+                    l2_loss = ((latent_code_init - latent ** 2).sum()
 
-                loss = c_loss + l2_loss + args.id_lambda * i_loss 
+                loss = c_loss + l2_loss*l2_lambda + args.id_lambda * i_loss 
             else:
                 loss = c_loss
 
