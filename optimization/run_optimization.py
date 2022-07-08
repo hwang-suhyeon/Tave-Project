@@ -102,8 +102,8 @@ def main(args):
                     l2_loss = 0
                     layer_loss = []
                     for i in range(latent.shape[1]):
-                        layer_loss.append(((latent_code_init[c] - latent[c]) ** 2) * l2_lambda)
-                        l2_loss += ((latent_code_init[c] - latent[c]) ** 2) * l2_lambda
+                        layer_loss.append(((latent_code_init[:, i, :] - latent[:, i, :]) ** 2) * l2_lambda)
+                        l2_loss += ((latent_code_init[:, i, :] - latent[:, i, :]) ** 2) * l2_lambda
 
                 loss = c_loss + l2_loss + args.id_lambda * i_loss 
             else:
