@@ -108,9 +108,9 @@ def main(args):
                 loss = c_loss + l2_loss + args.id_lambda * i_loss 
             else:
                 loss = c_loss
-
+            print(loss)
             optimizer.zero_grad()
-            loss.backward()
+            loss.mean.backward()
             optimizer.step()
 
             pbar.set_description(
