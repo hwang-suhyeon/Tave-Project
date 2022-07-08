@@ -71,12 +71,12 @@ def main(args):
 
     # lamda값이 서서히 변할 때 변화 확인
     final_result_list = []
+    final_loss_result_list = {}
     l2_lambda = 0.0001
     cnt = 0
     while l2_lambda <= 0.1:
         cnt += 1
         l2_lambda = round(l2_lambda, 4)
-        l2_lambda += 0.001
         
         #loss 계산 함수
         for i in pbar:
@@ -98,18 +98,13 @@ def main(args):
                 if args.work_in_stylespace:
                     l2_loss = sum([((latent_code_init[c] - latent[c]) ** 2).sum() for c in range(len(latent_code_init))])
                 else:
-                    s_error = 0
-                    s_error_59 = 0
+                    # 레이어 별로 lambda값 적용하고 loss값 찍어보기
+                    l2_loss = 0
+                    layer_loss = []
                     for i in range(latent.shape[1]):
-                        if i == 4 or i == 8:
-                            s_error_59 += ((latent_code_init[:, i, :] - latent[:, i, :]) ** 2).sum()
-                        else:
-                            s_error += ((latent_code_init[:, i, :] - latent[:, i, :]) ** 2).sum()
-                    
-                    # 5번째, 9번째 layer에만 lambda 적용 x(인자가 아닌 코드로 lambda값 변화)
-                    s_error *= l2_lambda
-                    
-                    l2_loss = s_error + s_error_59
+                        layer_loss.append(((latent_code_init[c] - latent[c]) ** 2) * l2_lambda)
+                        l2_loss += ((latent_code_init[c] - latent[c]) ** 2) * l2_lambda
+
                 loss = c_loss + l2_loss + args.id_lambda * i_loss 
             else:
                 loss = c_loss
@@ -130,19 +125,16 @@ def main(args):
 
                 torchvision.utils.save_image(img_gen, f"results/{str(i).zfill(5)}.jpg", normalize=True, range=(-1, 1))
 
-        
-        print('\n')
-        print()
-        print('origin latent.shape:', latent_code_init.shape, end = '\n')
-        print('new latent shape:', latent.shape, end = '\n')
-        print('origin latent: ', latent_code_init, end = '\n')
-        print('new latent: ', latent, end = '\n')
-        
+        #rwsult print
         diff = abs(latent_code_init - latent)
-        print("[ ", cnt, " ]=================================================")
+        print("\n[ ", cnt, " ]=================================================")
         for i in range(latent.shape[1]):
-            print(torch.mean(diff[:, i, :]), end = '\n')   
-        
+            print(torch.mean(diff[:, i, :]), end = '\n')
+        print(layer_loss)   
+
+        # lambda별 결과 저장
+        final_loss_result_list[l2_lambda] = layer_loss
+
         if args.mode == "edit":
             final_result = torch.cat([img_orig, img_gen])
         else:
@@ -150,6 +142,7 @@ def main(args):
             
         
         final_result_list.append(final_result)
+        l2_lambda += 0.001
 
     return final_result_list
 
