@@ -139,7 +139,7 @@ def main(args):
             
         
         final_result_list.append(final_result)
-        l2_lambda += 0.001
+        l2_lambda += 0.1
 
     return final_result_list, final_loss_result_list
 
