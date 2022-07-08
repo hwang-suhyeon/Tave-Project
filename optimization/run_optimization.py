@@ -25,7 +25,7 @@ def get_lr(t, initial_lr, rampdown=0.25, rampup=0.05):
 
 
 def main(args):
-    # lamda값이 서서히 변할 때 변화 확인
+    # lambda값이 서서히 변할 때 변화 확인
     final_result_list = []
     final_loss_result_list = {}
     l2_lambda = 0.0001
@@ -123,7 +123,7 @@ def main(args):
 
                 torchvision.utils.save_image(img_gen, f"results/{str(i).zfill(5)}.jpg", normalize=True, range=(-1, 1))
 
-        #rwsult print
+        #result print
         diff = abs(latent_code_init - latent)
         print("\n[ ", cnt, " ]==================================================")
         for i in range(latent.shape[1]):
