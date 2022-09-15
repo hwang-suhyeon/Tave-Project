@@ -1,3 +1,15 @@
+# Tave-Project
+- 역할: StyleCLIP 성능 개선
+- 어떤 문제가 있는지 분석 및 각 도메인마다 다른 lambda 값 적용
+  - 도메인 설정: 헤어, 표정, 얼굴
+  - Latent Vector Size: 1 * 18 * 512 
+  - Lamda값이 변할 때 5, 9번째 layer에 변화가 큼 &rightarrow; 5, 9번째 layer는 기존 얼굴, 눈, 코, 입을 유지하려는 성질을 가진 layer
+  - 
+
+
+
+
+
 # StyleCLIP: Text-Driven Manipulation of StyleGAN Imagery (ICCV 2021 Oral)
 
 [Run this model on Replicate](https://replicate.ai/orpatashnik/styleclip)
